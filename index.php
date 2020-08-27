@@ -113,7 +113,7 @@
                                     <input type="submit" class="btn btn-success btn-block btn-sm" value="Vueltas mas Rapidas" name="vrpte" />
                                 </div>
                                 <div class="form-group">
-                                    <input type="submit" class="btn btn-success btn-block btn-sm" disabled="disabled" value="Kilometros recorridos" name="m" />  
+                                    <input type="submit" class="btn btn-success btn-block btn-sm" value="Vueltas mas rapidas de cada piloto" name="m" />  
                                 </div>
                                 
                             </form>
@@ -432,10 +432,7 @@
                 include('server/connection.php');
                 if(isset($_POST['m'])){
 
-                    
-                    $query = "SELECT P.name_pilot, ROUND(MAX(lap) * T.mileage, 1) AS km_pilot, T.name_track, event_date FROM records 
-                    INNER JOIN tracks T ON records.id_track = T.name_track 
-                    INNER JOIN pilots P ON records.id_pilot = P.id_pilot GROUP BY P.id_pilot ORDER BY km_pilot DESC";
+                    $query = "SELECT DISTINCT name_pilot FROM pilots";
                     $result = mysqli_query($db, $query);
                 
                     if(!$result){
@@ -447,14 +444,16 @@
                     <thead>
                         <tr>
                             <th>Name pilot</th>
-                            <th>Mileage</th>
+                            <th>Records</th>
                         </tr>
                     </thead>
                     <tbody>
                         <?php while($row = mysqli_fetch_array($result)){ ?>
                         <tr>
-                            <td width="150px"><?php echo $row['name_pilot']; ?></td>
-                            <td width="150px"><?php echo $row['km_pilot']; ?></td>
+                            <td><?php echo $row['name_pilot']; ?></td>
+                            <td>
+                                <a class="btn btn-info" href="pilots.php?name_pilot=<?php echo $row['name_pilot']; ?>">Records</a>
+                            </td>
                         </tr>
                         <?php } ?>
                     </tbody>
