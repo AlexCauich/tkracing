@@ -9,6 +9,7 @@
 
     <link href="https://fonts.googleapis.com/css2?family=Roboto&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="assets/css/style_template.css">
+    <link rel="stylesheet" href="assets/css/modes.css">
     <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
@@ -33,10 +34,61 @@
                     <li class="nav-link">
                         <a class="nav-link active" href="nav/Reglamento TEKIFEST v-1.5.pdf">Reglamento</a>
                     </li>
+                    <li class="nav-link">
+                        <a type="button" class="nav-link active" data-toggle="modal" data-target="#exampleModal">
+                            Settings
+                        </a>                  
+                    </li>
                 </ul>
             </form>
         </div>
     </nav>
+
+    <!--Modal-->
+    <div id="App" >
+        <!-- Modal Register -->
+        <div class="modal fade" id="exampleModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <form id="form-content" class="modal-content">
+                    <div class="modal-header ">
+                        <h5 class="modal-title" id="exampleModalLabel">Tekifest</h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="modalimg form-group">
+                            <img src="assets/images/logo.jpg" alt="" srcset="">
+                        </div>
+                        <label for="email">Username or Email</label>
+                        <div class="input-group mb-3">
+                            <div class="input-group-prepend">
+                                <img src="Budget/svg/user.svg" class="input-group-text" id="basic-addon1"/>
+                            </div>  
+                            <input type="text" class="form-control" name="username" id="username" placeholder="Example@exam.com" required aria-label="email" aria-describedby="basic-addon1" >  
+                        </div>
+                        <div class="form-group">
+                            <label for="email">Password</label>
+                            <div class="input-group mb-3">
+                                <div class="input-group-prepend">
+                                    <img src="Budget/svg/eye.svg" type="button" class="input-group-text" id="mostrar_contrasena"/>
+                                </div>  
+                                <input type="password" class="form-control" name="password" id="password" placeholder="Contraseña" required aria-label="email" aria-describedby="basic-addon1" require>  
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <div class="form-group">
+                            <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                            <button type="submit" name="login" class="btn btn-success">Log In</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+        <!--end modal--> 
+    </div>
+    <!--Fin Modal-->
 
     <div class="container">
 
@@ -197,10 +249,10 @@
 
                         $event_date = $_POST['event_date']; 
                         
-                        $query = "SELECT P.name_pilot, P.category, lap, lap_time, P.model, P.brand FROM records INNER JOIN pilots P ON records.id_pilot = P.id_pilot WHERE lap_time = ANY (SELECT MIN(lap_time) FROM records WHERE lap_time > '00.01:00.00' GROUP BY records.id_pilot ) AND event_date = '$event_date' ORDER BY records.lap_time, P.category ASC";
+                        $query = "SELECT P.name_pilot, P.category, lap, lap_time, P.model, P.brand FROM records INNER JOIN pilots P ON records.id_pilot = P.id_pilot WHERE lap_time = ANY (SELECT MIN(lap_time) FROM records WHERE lap_time > '00.01:00.00' GROUP BY records.id_pilot ) AND event_date = '$event_date' ORDER BY lap_time ASC";
                         $result = mysqli_query($db, $query);
                     
-                        if(!$result){
+                        if(!$result){ 
                             die("Query error");
                         }
                         $sql = "SELECT id_track FROM records WHERE event_date = '$event_date' LIMIT 1";
@@ -385,18 +437,15 @@
                 if(isset($_POST['vrpte'])){
 
                     
-                    $query = "SELECT P.name_pilot, P.category, lap, lap_time, P.model, P.brand, T.name_track, event_date  FROM records
-                    INNER JOIN tracks T ON records.id_track = T.name_track
+                    $query = "SELECT P.name_pilot, P.category, lap_time, lap, brand, model, T.name_track, event_date FROM records 
                     INNER JOIN pilots P ON records.id_pilot = P.id_pilot
-                    WHERE lap_time = ANY (SELECT MIN(lap_time) FROM records WHERE lap_time > '00.01:00.000' GROUP BY event_date) ORDER BY lap DESC
-                    
-                    ";
+                    INNER JOIN tracks T ON records.id_track = T.name_track
+                    WHERE lap_time = ANY(SELECT MIN(lap_time) FROM records WHERE lap_time > '00:00.000' GROUP BY event_date)";
                     $result = mysqli_query($db, $query);
-                
-                    if(!$result){
-                        die("Query error");
-                    }
-            
+                    
+                   if(!$result){
+                       die("Query name track failed");
+                   }            
                 ?>
                 <table class="table table-striped mt-3">
                     <thead>
@@ -412,18 +461,21 @@
                         </tr>
                     </thead>
                     <tbody>
-                        <?php while($row = mysqli_fetch_array($result)){ ?>
+                    <?php 
+                        while($row = mysqli_fetch_array($result)){
+                    ?>
+
                         <tr>
-                            <td width="210px"><?php echo $row['name_pilot']; ?></td>
-                            <td><?php echo $row['category']; ?></td>
-                            <td><?php echo $row['lap']; ?></td>
-                            <td><?php echo $row['lap_time']; ?></td>
-                            <td><?php echo $row['brand']; ?></td>
-                            <td><?php echo $row['model']; ?></td>
-                            <td><?php echo $row['name_track'] ?></td>
-                            <td><?php echo $row['event_date'] ?></td>
+                            <td><?php echo $row['name_pilot'] ?></td>
+                            <td><?php echo $row['category'] ?></td>
+                            <td><?php echo $row['lap'] ?></td>
+                            <td><?php echo $row['lap_time'] ?></td>
+                            <td><?php echo $row['brand'] ?></td>
+                            <td><?php echo $row['model'] ?></td>
+                            <td><?php echo $row['name_track'] ?></td>                            
+                            <td><?php echo $row['event_date'] ?></td>                            
                         </tr>
-                        <?php } ?>
+                    <?php } ?>
                     </tbody>
                 </table>
                 <?php } ?>
@@ -461,10 +513,15 @@
                 <?php } ?>
                 <!-- Fin de consultas globales -->
 
+                
                 </div>
             </div>
         </div>
 
     </div>
+
+    <script src="http://code.jquery.com/jquery-3.4.1.min.js" integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo=" crossorigin="anonymous"></script>
+    <script src="Log_in.js"></script>
+
 </body>
 </html>
